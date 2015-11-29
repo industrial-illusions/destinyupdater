@@ -14,7 +14,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.ini4j.Ini;
@@ -23,8 +22,7 @@ import org.ini4j.Ini;
  * @author Myth1c
  */
 
-public class AutoUpdater
-{
+public class AutoUpdater {
 	private String updatelinks = "http://destiny.industrial-illusions.net/updater/updates.ini";
 	private String versionlog = "http://destiny.industrial-illusions.net/updater/release.txt";
 
@@ -38,50 +36,35 @@ public class AutoUpdater
 	private Ini updatelinksini;
 	private InputStreamReader updatelinksreader;
 
-	public AutoUpdater()
-	{
-		if(checkForUpdate())
-		{
-			try
-			{
+	public AutoUpdater(){
+		if(checkForUpdate()){
+			try{
 				updatelinksreader = new InputStreamReader(new URL(updatelinks).openStream());
-				@SuppressWarnings("unused")
-				Ini updatelinksini = new Ini(updatelinksreader);
-			}
-			catch(IOException e)
-			{
+			}catch(IOException e){
 				e.printStackTrace();
 			}
 			System.out.println("A new version is available, please wait while the game is being updated to the latest version.");
 			update();
 
-			try
-			{
+			try{
 				updatelinksreader.close();
-			}
-			catch(IOException e)
-			{
+			}catch(IOException e){
 				e.printStackTrace();
 			}
-		}
-		else
-		{
-			System.out.println("You are running the latest version of Pokemonium.");
+		}else{
+			System.out.println("You are running the latest version of Pokemon Destiny.");
 		}
 	}
 
-	public void download_zip_file(URL url)
-	{
+	public void download_zip_file(URL url){
 		File theDir = new File("updates/");
 
 		// if the directory does not exist, create it
-		if(!theDir.exists())
-		{
+		if(!theDir.exists()){
 			theDir.mkdir();
 		}
 
-		try
-		{
+		try{
 			URLConnection conn = url.openConnection();
 			conn.setDoInput(true);
 			conn.setRequestProperty("content-type", "binary/data");
@@ -94,8 +77,7 @@ public class AutoUpdater
 			byte[] b = new byte[1024];
 			int count;
 
-			while((count = in.read(b)) > 0)
-			{
+			while((count = in.read(b)) > 0){
 				out.write(b, 0, count);
 			}
 			out.close();
@@ -108,39 +90,14 @@ public class AutoUpdater
 		}
 	}
 
-	private void update()
-	{
+	private void update(){
 		// Download next versionidx
-		while(versionidx != latestVersionidx)
-		{
-			if(isForced(versionidx + 1))
-			{
-				downloadUpdate(versionidx + 1);
-			}
-			else
-			{
-				System.out.println("This update might be unstable (hence the question), do you still want to update?");
-				System.out.println("[Y] / [N]");
-
-				// Y or N
-				Scanner s = new Scanner(System.in);
-				String str = s.nextLine();
-				if(str.equalsIgnoreCase("y"))
-				{
-					downloadUpdate(versionidx + 1);
-				}
-				else
-				{
-					s.close();
-					break;
-				}
-				s.close();
-			}
+		while(versionidx != latestVersionidx){
+			downloadUpdate(versionidx + 1);
 		}
 
 		System.out.println("Done updating.");
-		try
-		{
+		try{
 			// Create file
 			FileWriter fstream = new FileWriter("version.txt");
 			BufferedWriter out = new BufferedWriter(fstream);
@@ -148,42 +105,22 @@ public class AutoUpdater
 			// Close the output stream
 			out.close();
 		}
-		catch(Exception e)
-		{// Catch exception if any
+		catch(Exception e){// Catch exception if any
 			System.err.println("Error: " + e.getMessage());
 		}
 
 		// Start game
 	}
 
-	private boolean isForced(int i)
-	{
-		Boolean forced = true;
-		Ini.Section s = updatelinksini.get(versions.get(i));
-		String forc = s.get("forced");
-		if(forc.equalsIgnoreCase("NO"))
-		{
-			forced = false;
-		}
-		else if(forc.equalsIgnoreCase("YES"))
-		{
-			forced = true;
-		}
-		return forced;
-	}
-
-	private void downloadUpdate(int i)
-	{
+	private void downloadUpdate(int i){
 		Ini.Section s = updatelinksini.get(versions.get(i));
 		String link = s.get("link");
-		System.out.println("Downloading update from: " + link);
+		String date = s.get("date");
+		System.out.println("Downloading update "+versions.get(i)+" produced on "+date);
 
-		try
-		{
+		try{
 			download_zip_file(new URL(link));
-		}
-		catch(MalformedURLException e)
-		{
+		}catch(MalformedURLException e){
 			e.printStackTrace();
 		}
 
@@ -192,20 +129,17 @@ public class AutoUpdater
 		extractFile();
 	}
 
-	public void extractFile()
-	{
+	public void extractFile(){
 		System.out.println("Extracting...");
 
-		try
-		{
+		try{
 			byte[] buf = new byte[1024];
 			ZipInputStream zipinputstream = null;
 			ZipEntry zipentry;
 			zipinputstream = new ZipInputStream(new FileInputStream("updates/" + versions.get(versionidx + 1) + ".zip"));
 
 			zipentry = zipinputstream.getNextEntry();
-			while(zipentry != null)
-			{
+			while(zipentry != null){
 				// for each entry to be extracted
 				String entryName = zipentry.getName();
 				entryName = entryName.replace('/', File.separatorChar);
@@ -223,28 +157,20 @@ public class AutoUpdater
 					extension = entryName.substring(i + 1);
 				}
 
-				if(extension.equalsIgnoreCase("jar"))
-				{
-					if(newFile.exists())
-					{
+				if(extension.equalsIgnoreCase("jar")){
+					if(newFile.exists()){
 						System.out.println("Deleting old jar file");
-						if(newFile.delete())
-						{
+						if(newFile.delete()){
 							System.out.println("Delete succes, extracting new file");
-						}
-						else
-						{
+						}else{
 							System.out.println("Delete failed...");
 						}
 					}
 				}
 
-				if(zipentry.isDirectory())
-				{
-					if(!newFile.exists())
-					{
-						if(!newFile.mkdirs())
-						{
+				if(zipentry.isDirectory()){
+					if(!newFile.exists()){
+						if(!newFile.mkdirs()){
 							break;
 						}
 					}
@@ -254,8 +180,7 @@ public class AutoUpdater
 
 				fileoutputstream = new FileOutputStream(entryName);
 
-				while((n = zipinputstream.read(buf, 0, 1024)) > -1)
-				{
+				while((n = zipinputstream.read(buf, 0, 1024)) > -1){
 					fileoutputstream.write(buf, 0, n);
 				}
 
@@ -263,8 +188,7 @@ public class AutoUpdater
 				zipinputstream.closeEntry();
 				zipentry = zipinputstream.getNextEntry();
 
-				if(entryName.equalsIgnoreCase("updater.jar"))
-				{
+				if(entryName.equalsIgnoreCase("updater.jar")){
 					updatedUpdater = true;
 				}
 
@@ -272,8 +196,7 @@ public class AutoUpdater
 
 			zipinputstream.close();
 		}
-		catch(Exception e)
-		{
+		catch(Exception e){
 			e.printStackTrace();
 		}
 
@@ -281,10 +204,8 @@ public class AutoUpdater
 
 		versionidx += 1;
 
-		if(updatedUpdater)
-		{
-			try
-			{
+		if(updatedUpdater){
+			try{
 				// Create file
 				FileWriter fstream = new FileWriter("Version.txt");
 				BufferedWriter out = new BufferedWriter(fstream);
@@ -297,12 +218,10 @@ public class AutoUpdater
 				System.err.println("Error: " + e.getMessage());
 			}
 
-			try
-			{
+			try{
 				updatelinksreader.close();
 			}
-			catch(IOException e)
-			{
+			catch(IOException e){
 				e.printStackTrace();
 			}
 			System.out.println("The updater was updated, please restart the game to resume...");
@@ -311,25 +230,22 @@ public class AutoUpdater
 	}
 
 	/* Returns true when an update is available */
-	public boolean checkForUpdate()
-	{
+	public boolean checkForUpdate(){
 		System.out.println("Checking for new version");
 
 		versions = new ArrayList<String>();
 
-		try
-		{
+		try{
 			BufferedReader in = new BufferedReader(new FileReader(new File("ver.txt")));
 			currentVersion = in.readLine();
 			System.out.println("Current version: " + currentVersion);
 			in.close();
 		}
-		catch(IOException e)
-		{
+		catch(IOException e){
+			e.printStackTrace();
 		}
 
-		try
-		{
+		try{
 			// URL of the versionlog.txt
 			URL versionURL = new URL(versionlog);
 
@@ -337,15 +253,13 @@ public class AutoUpdater
 			String str;
 
 			// Get the latest version
-			while((str = in.readLine()) != null)
-			{
+			while((str = in.readLine()) != null) {
 				latestVersionidx++;
 				// Add the version string for easier version lookup when downloading
 				versions.add(str);
 
 				// When the current line equals the clients current version, save its index for easier version lookup when downloading
-				if(str.equals(currentVersion))
-				{
+				if(str.equals(currentVersion)) {
 					versionidx = latestVersionidx - 1;
 				}
 
@@ -354,8 +268,8 @@ public class AutoUpdater
 			latestVersionidx--;
 			in.close();
 		}
-		catch(IOException e)
-		{
+		catch(IOException e){
+			e.printStackTrace();
 		}
 		System.out.println("Latest version: " + latestVersion);
 
